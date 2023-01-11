@@ -1,34 +1,43 @@
 import throttle from 'lodash.throttle';
+
+
 const refs = {
-  feedbackForm: document.querySelector('.feedback-form'),
+    formEl: document.querySelector(".feedback-form"),
+    emailEl: document.querySelector('[name="email"]'),
+    textareaEl: document.querySelector('[name="message"]')   
+}
+refs.formEl.addEventListener('submit', onFormSubmit);
+refs.formEl.addEventListener('input', throttle(addToLS, 500));
+
+const STORAGE_KEY = 'feedback-form - state';
+let formData = {};
+
+function onFormSubmit(e) { 
+    e.preventDefault();
+    console.log("Отправляєм форму");
+    
+  formData = {};
+    e.target.reset();
+   localStorage.removeItem(STORAGE_KEY);
 };
 
-refs.feedbackForm.addEventListener('input', throttle(saveFeedBack, 500));
-refs.feedbackForm.addEventListener('submit', sendFeedBack);
+function addToLS(e) {
+//    console.log(e.target.name);
+//     console.log(e.target.value);
+   
+    formData[e.target.name] = e.target.value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 
-function saveFeedBack(e) {
-  const valueFromLS =
-    JSON.parse(localStorage.getItem('feedback-form-state')) || {};
-  valueFromLS[e.target.name] = e.target.value;
-  const feedbackForLocalStorage = JSON.stringify(valueFromLS);
+    // console.log(formData);
+};
 
-  localStorage.setItem('feedback-form-state', feedbackForLocalStorage);
-}
-const valueFromLS =
-  JSON.parse(localStorage.getItem('feedback-form-state')) || {};
-refs.feedbackForm.elements.email.value = valueFromLS.email || '';
-refs.feedbackForm.elements.message.value = valueFromLS.message || '';
+populateTextarea();
+function populateTextarea() {
+    const savedMessage = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    // console.log(savedMessage);
+    if (savedMessage) {
+        refs.textareaEl.value = savedMessage.message || "";
+         refs.emailEl.value = savedMessage.email || "";
+    }
 
-function sendFeedBack(e) {
-  e.preventDefault();
-  if (
-    refs.feedbackForm.elements.message.value === '' ||
-    refs.feedbackForm.elements.email.value === ''
-  ) {
-    alert('Error! Enter all fields');
-    return;
-  }
-  console.log(JSON.parse(localStorage.getItem('feedback-form-state')));
-  e.target.reset();
-  localStorage.clear();
 }
